@@ -3,8 +3,8 @@
 ![Concierge logo](Concierge_small.png)
 
 
-**Concierge** is a production-grade WhatsApp orchestration daemon for **molt.bot** and advanced agent workflows.  
-It sits on top of **wacli** (WhatsApp DB sync by *steinberger*) and **OpenClaw** (formerly Clawdbot) to create **isolated, per-user sessions** with strong sandboxing, smart queueing, and reliable delivery.
+**Concierge** is a production-grade WhatsApp orchestration daemon for **OpenClaw** agent workflows.  
+It sits on top of **wacli** (WhatsApp DB sync by *steinberger*) and **OpenClaw** (formerly Clawdbot/Moltbot) to create **isolated, per-user sessions** with strong sandboxing, smart queueing, and reliable delivery.
 
 ## Why Concierge
 
@@ -63,8 +63,8 @@ Concierge assumes OpenClaw runs sessions in a restricted sandbox. Configure your
 
 Concierge also reads `messages.responsePrefix` from the OpenClaw/Clawdbot config (via `openclaw config get messages.responsePrefix` or `clawdbot config get messages.responsePrefix`). If you don't want a prefix, set it to an empty string in OpenClaw.
 
-For background on sandboxing and why session isolation matters, see the molt.bot security docs:
-https://docs.molt.bot/
+For background on sandboxing and why session isolation matters, see the OpenClaw docs:
+https://docs.openclaw.ai/
 
 
 ## Security model
@@ -81,7 +81,9 @@ Concierge also **auto-prunes stale sandboxes** (default: every hour) to keep the
 - macOS or Linux
 - **wacli** by steinberger  
   https://github.com/steinberger/wacli
-- **OpenClaw** (gateway + CLI, formerly Clawdbot; Concierge auto-detects `openclaw` or `clawdbot`)
+- **OpenClaw** (gateway + CLI, formerly Clawdbot/Moltbot)  
+  https://openclaw.ai/  
+  Concierge auto-detects `openclaw` or `clawdbot` (compat alias).
 - Elixir 1.14+
 - SQLite
 - Docker (required for OpenClaw sandboxes)
