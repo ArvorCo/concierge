@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://arvorco.github.io/concierge">
-    <img src="Concierge_small.png" alt="Concierge logo" width="220" />
+    <img src="docs/Concierge_small.png" alt="Concierge logo" width="220" />
   </a>
 </p>
 
