@@ -1,0 +1,71 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+REL_BIN="$ROOT_DIR/_build/prod/rel/concierge/bin/concierge"
+
+if [ -x "$REL_BIN" ]; then
+  release_pid() {
+    # Prefer the release RPC pid (best when it works), but fall back to a
+    # process match so we don't get stuck if RPC is temporarily unavailable.
+    local pid=""
+
+    pid="$("$REL_BIN" pid 2>/dev/null || true)"
+    if [[ "$pid" =~ ^[0-9]+$ ]]; then
+      echo "$pid"
+      return 0
+    fi
+
+    # Match the running beam node for this release name.
+    pid="$(pgrep -f 'beam\\.smp.*-sname concierge' 2>/dev/null | head -n 1 || true)"
+    if [[ "$pid" =~ ^[0-9]+$ ]]; then
+      echo "$pid"
+      return 0
+    fi
+
+    return 1
+  }
+
+  start_release() {
+    # If already running, do nothing.
+    if release_pid >/dev/null 2>&1; then
+      return 0
+    fi
+
+    # Start in the background (release-managed). It may return non-zero if already running.
+    "$REL_BIN" daemon >/dev/null 2>&1 || "$REL_BIN" start >/dev/null 2>&1 || true
+
+    # Give it a moment to come up before the watchdog loop checks again.
+    for _ in {1..20}; do
+      if release_pid >/dev/null 2>&1; then
+        return 0
+      fi
+      sleep 0.25
+    done
+  }
+
+  stop_release() {
+    "$REL_BIN" stop >/dev/null 2>&1 || true
+    # If RPC stop fails, ensure the beam process is terminated.
+    if release_pid >/dev/null 2>&1; then
+      pkill -f 'beam\\.smp.*-sname concierge' >/dev/null 2>&1 || true
+    fi
+  }
+
+  trap 'stop_release; exit 0' INT TERM
+
+  start_release
+
+  # Keep a parent process alive for launchd and restart the release if it dies.
+  while true; do
+    if ! release_pid >/dev/null 2>&1; then
+      start_release
+    fi
+    sleep 5
+  done
+fi
+
+# Dev fallback
+cd "$ROOT_DIR"
+exec elixir -S mix run --no-halt

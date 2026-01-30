@@ -1,0 +1,106 @@
+{
+  "enabled": true,
+  "name": "Concierge",
+  "version": "1.0.0",
+  "hours": {
+    "enabled": false,
+    "start": 8,
+    "end": 20,
+    "timezone": "America/Sao_Paulo",
+    "weekdays_only": false
+  },
+  "filters": {
+    "only_dms": true,
+    "ignore_groups": true,
+    "ignore_broadcast": true,
+    "ignore_jids": [],
+    "max_response_length": 500,
+    "min_wait_seconds": 3,
+    "max_wait_seconds": 3
+  },
+  "monitor": {
+    "backlog_enabled": true,
+    "backlog_interval_seconds": 60,
+    "backlog_window_seconds": 0,
+    "backlog_retry_seconds": 300,
+    "backlog_catch_all_on_start": true,
+    "backlog_ignore_hours": true
+  },
+  "safety": {
+    "rate_limit_per_chat_per_hour": 10,
+    "processing_timeout_seconds": 180,
+    "forbidden_words": [
+      "delete",
+      "exec",
+      "rm -rf",
+      "sudo",
+      "eval",
+      "system"
+    ],
+    "require_human_approval_keywords": [
+      "contrato",
+      "proposta comercial",
+      "investimento",
+      "parceria estratégica"
+    ],
+    "escalate_to_human_keywords": [
+      "urgente",
+      "problema sério",
+      "reclamação",
+      "cancelamento"
+    ]
+  },
+  "human_takeover": {
+    "auto_pause_hours": 3,
+    "cooldown_after_human_message": true
+  },
+  "sandbox_cleanup": {
+    "enabled": true,
+    "interval_seconds": 3600,
+    "max_age_seconds": 3600,
+    "name_prefix": "clawdbot-sbx-",
+    "remove_running": true,
+    "dry_run": false
+  },
+  "whitelist": {
+    "mode": "all",
+    "numbers": []
+  },
+  "blocklist": {
+    "enabled": true,
+    "numbers": [],
+    "note": "Example: add internal numbers you want to ignore"
+  },
+  "model": {
+    "primary": "anthropic/claude-sonnet-4-5",
+    "max_tokens": 800,
+    "temperature": 0.9,
+    "thinking": "off"
+  },
+  "clawdbot": {
+    "apply_tool_policy": false
+  },
+  "sender": {
+    "provider": "wacli",
+    "clawdbot_target": "jid",
+    "clawdbot_timeout_ms": 20000
+  },
+  "notifications": {
+    "notify_admin_number": "+15550000000",
+    "notify_on_new_message": true,
+    "notify_on_bot_response": true,
+    "notify_on_human_takeover": true,
+    "notify_on_escalation": true,
+    "notify_on_error": true,
+    "provider": "clawdbot"
+  },
+  "logging": {
+    "enabled": true,
+    "log_dir": "logs",
+    "retention_days": 30,
+    "log_full_json_on_error": true
+  },
+  "paths": {
+    "home_dir": null
+  }
+}

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>co.arvor.concierged</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>MIX_ENV</key>
+    <string>prod</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__CONCIERGE_HOME__/bin/concierged-daemon</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__CONCIERGE_HOME__</string>
+
+  <key>StandardOutPath</key>
+  <string>__CONCIERGE_HOME__/logs/concierged-stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>__CONCIERGE_HOME__/logs/concierged-stderr.log</string>
+</dict>
+</plist>

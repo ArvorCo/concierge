@@ -1,0 +1,96 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+cmd="${1:-}"
+CONCIERGE_HOME="${CONCIERGE_HOME:-$ROOT_DIR}"
+commands_dir="$CONCIERGE_HOME/commands"
+
+emit_command() {
+  local payload="$1"
+  mkdir -p "$commands_dir"
+  local ts
+  ts="$(date +%s%N)"
+  printf '%s\n' "$payload" > "$commands_dir/command-${ts}.json"
+}
+
+install_launchd() {
+  local target_home="$CONCIERGE_HOME"
+  local plist_src="$ROOT_DIR/launchd/co.arvor.concierged.plist"
+  local plist_dst="$HOME/Library/LaunchAgents/co.arvor.concierged.plist"
+
+  mkdir -p "$HOME/Library/LaunchAgents" "$target_home/logs"
+  sed "s#__CONCIERGE_HOME__#${target_home}#g" "$plist_src" > "$plist_dst"
+
+  launchctl bootout gui/$(id -u) "$plist_dst" 2>/dev/null || true
+  launchctl bootstrap gui/$(id -u) "$plist_dst"
+  launchctl kickstart -k gui/$(id -u)/co.arvor.concierged
+
+  echo "Installed and started LaunchAgent co.arvor.concierged for $target_home"
+}
+
+uninstall_launchd() {
+  local plist_dst="$HOME/Library/LaunchAgents/co.arvor.concierged.plist"
+  launchctl bootout gui/$(id -u) "$plist_dst" 2>/dev/null || true
+  rm -f "$plist_dst"
+  echo "Uninstalled LaunchAgent co.arvor.concierged"
+}
+
+case "$cmd" in
+  install-launchd)
+    install_launchd
+    ;;
+  uninstall-launchd)
+    uninstall_launchd
+    ;;
+
+  reprocess-all)
+    emit_command '{"action":"reprocess_all"}'
+    echo "Queued reprocess-all"
+    ;;
+  reprocess)
+    jid="${2:-}"
+    if [ -z "$jid" ]; then
+      echo "Usage: bin/concierge reprocess <jid>"
+      exit 1
+    fi
+    emit_command "{\"action\":\"reprocess\",\"jid\":\"$jid\"}"
+    echo "Queued reprocess for $jid"
+    ;;
+  reset-all)
+    emit_command '{"action":"reset_all"}'
+    echo "Queued reset-all"
+    ;;
+  reset)
+    jid="${2:-}"
+    if [ -z "$jid" ]; then
+      echo "Usage: bin/concierge reset <jid>"
+      exit 1
+    fi
+    emit_command "{\"action\":\"reset\",\"jid\":\"$jid\"}"
+    echo "Queued reset for $jid"
+    ;;
+
+  help|--help|-h|"")
+    cat <<USAGE
+Usage:
+  bin/concierge install-launchd
+  bin/concierge uninstall-launchd
+
+  bin/concierge reprocess <jid>
+  bin/concierge reprocess-all
+  bin/concierge reset <jid>
+  bin/concierge reset-all
+
+Environment:
+  CONCIERGE_HOME  Runtime home directory (defaults to repo root)
+USAGE
+    ;;
+
+  *)
+    # Dev-mode CLI (requires mix/deps).
+    elixir -S mix run -e "Concierge.CLI.main(System.argv())" -- "$@"
+    ;;
+esac
