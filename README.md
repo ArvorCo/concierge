@@ -1,10 +1,12 @@
 # Concierge
 
-![Concierge logo](Concierge_small.png)
+<p align="center">
+  <img src="Concierge_small.png" alt="Concierge logo" width="220" />
+</p>
 
 
 **Concierge** is a production-grade WhatsApp orchestration daemon for **OpenClaw** agent workflows.  
-It sits on top of **wacli** (WhatsApp DB sync by *steinberger*) and **OpenClaw** (formerly Clawdbot/Moltbot) to create **isolated, per-user sessions** with strong sandboxing, smart queueing, and reliable delivery.
+It sits on top of **wacli** (WhatsApp DB sync by *steipete*: https://github.com/steipete/wacli) and **OpenClaw** (formerly Clawdbot/Moltbot) to create **isolated, per-user sessions** with strong sandboxing, smart queueing, and reliable delivery.
 
 ## Why Concierge
 
@@ -79,8 +81,8 @@ Concierge also **auto-prunes stale sandboxes** (default: every hour) to keep the
 ## Prerequisites
 
 - macOS or Linux
-- **wacli** by steinberger  
-  https://github.com/steinberger/wacli
+- **wacli** by steipete  
+  https://github.com/steipete/wacli
 - **OpenClaw** (gateway + CLI, formerly Clawdbot/Moltbot)  
   https://openclaw.ai/  
   Concierge auto-detects `openclaw` or `clawdbot` (compat alias).
