@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concierge — WhatsApp Orchestration Daemon</title>
+  <meta name="description" content="Production-grade WhatsApp orchestration daemon for OpenClaw agent workflows. Isolated sessions, sandboxing, smart queueing." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --bg-card: #161b22;
+      --bg-code: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --green: #7ee787;
+      --purple: #d2a8ff;
+      --orange: #ffa657;
+      --red: #ff7b72;
+      --max-w: 1120px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.85; }
+
+    code, .mono {
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      height: 56px;
+      gap: 1.5rem;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .nav-brand img { height: 28px; width: 28px; border-radius: 6px; }
+    .nav-links {
+      display: flex;
+      gap: 1.25rem;
+      align-items: center;
+      flex: 1;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); opacity: 1; }
+    .nav-gh {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .nav-gh:hover { color: var(--text); opacity: 1; }
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 1.5rem 4rem;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    .hero-logo {
+      width: 180px;
+      height: auto;
+      margin-bottom: 1.5rem;
+      border-radius: 16px;
+    }
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .hero .tagline {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 620px;
+      margin: 0 auto 2rem;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-outline { border: 1px solid var(--border); color: var(--text); background: transparent; }
+    .version-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--green);
+      border: 1px solid rgba(126,231,135,0.3);
+      background: rgba(126,231,135,0.08);
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 4.5rem 1.5rem;
+      max-width: var(--max-w);
+      margin: 0 auto;
+    }
+    section + section { border-top: 1px solid var(--border); }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .section-sub {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 2.5rem;
+      max-width: 640px;
+    }
+
+    /* ── WHY CARDS ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.375rem; }
+    .card p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── ARCHITECTURE ── */
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .arch-node {
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: center;
+      border: 1px solid var(--border);
+      min-width: 140px;
+    }
+    .arch-node.source { background: rgba(88,166,255,0.12); border-color: rgba(88,166,255,0.3); color: var(--accent); }
+    .arch-node.core { background: rgba(210,168,255,0.12); border-color: rgba(210,168,255,0.3); color: var(--purple); }
+    .arch-node.agent { background: rgba(126,231,135,0.12); border-color: rgba(126,231,135,0.3); color: var(--green); }
+    .arch-node.sink { background: rgba(255,166,87,0.12); border-color: rgba(255,166,87,0.3); color: var(--orange); }
+    .arch-arrow {
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .feat {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      font-size: 0.9rem;
+    }
+    .feat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      margin-top: 0.5rem;
+    }
+
+    /* ── INSTALL ── */
+    .install-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .install-col h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+    .code-block code {
+      color: var(--text);
+    }
+    .code-block .cmd { color: var(--accent); }
+    .code-block .cmt { color: var(--text-muted); }
+
+    .prereq-row {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .prereq-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .prereq-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--text); }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 1rem 1.5rem;
+        gap: 0.75rem;
+      }
+      .nav-links.open .nav-gh { margin-left: 0; }
+      .hamburger { display: block; }
+      .hero h1 { font-size: 2rem; }
+      .hero .tagline { font-size: 1.05rem; }
+      .cards { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .install-grid { grid-template-columns: 1fr; }
+      .arch-flow { flex-direction: column; }
+      .arch-arrow { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">
+      <img src="../Concierge_small.png" alt="Concierge" />
+      Concierge
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#why">Why</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/arvorco/concierge" class="nav-gh" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Toggle navigation">&#9776;</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <img src="../Concierge_small.png" alt="Concierge logo" class="hero-logo" />
+  <h1>Concierge</h1>
+  <p class="tagline">
+    Production-grade WhatsApp orchestration daemon for
+    <a href="https://openclaw.ai">OpenClaw</a> agent workflows.
+  </p>
+  <div class="hero-buttons">
+    <a href="#install" class="btn btn-primary">Get Started</a>
+    <a href="https://github.com/arvorco/concierge" class="btn btn-outline" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+  <span class="version-badge">v2.0.0 &middot; Elixir/OTP</span>
+</div>
+
+<!-- WHY CONCIERGE -->
+<section id="why">
+  <h2 class="section-title">Why Concierge</h2>
+  <p class="section-sub">The missing orchestration layer between WhatsApp and your AI agents.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon" style="background:rgba(88,166,255,0.12); color:var(--accent);">&#x1f512;</div>
+      <h3>Process Isolation</h3>
+      <p>Every WhatsApp contact gets its own Elixir process with dedicated state, context, and identity. Crashes are contained.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(126,231,135,0.12); color:var(--green);">&#x1f4e6;</div>
+      <h3>Docker Sandboxing</h3>
+      <p>Sessions run inside OpenClaw Docker containers with restricted workspace access and no tools by default.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(210,168,255,0.12); color:var(--purple);">&#x1f91d;</div>
+      <h3>Human Takeover</h3>
+      <p>Detects manual replies and auto-pauses the bot, preventing conversations from being hijacked by AI.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(255,166,87,0.12); color:var(--orange);">&#x2615;</div>
+      <h3>Message Coalescing</h3>
+      <p>Three quick texts become one AI response. Smart wait windows reduce noise and improve response quality.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(255,123,114,0.12); color:var(--red);">&#x1f4cb;</div>
+      <h3>Backlog Catch-Up</h3>
+      <p>Responds to missed messages on startup or on schedule. Never leaves a customer hanging after downtime.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(88,166,255,0.12); color:var(--accent);">&#x1f4be;</div>
+      <h3>Single-Writer SQLite</h3>
+      <p>All DB writes are serialized through dedicated GenServers. No lock contention, no corruption, no surprises.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <h2 class="section-title">Architecture</h2>
+  <p class="section-sub">A clean data flow from WhatsApp to AI and back, powered by OTP supervision.</p>
+
+  <div class="arch-flow">
+    <div class="arch-node source">WhatsApp</div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-node source">wacli sync</div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-node core">Monitor</div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-node core">ChatHandler</div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-node agent">OpenClaw Agent</div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-node sink">wacli send</div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-node source">WhatsApp</div>
+  </div>
+
+  <div class="code-block" style="max-width:560px; margin:0 auto;">
+    <code>
+<span class="cmt">Concierge.Supervisor</span><br/>
+ &#x251c;&#x2500;&#x2500; ChatRegistry<br/>
+ &#x251c;&#x2500;&#x2500; ConfigServer<br/>
+ &#x251c;&#x2500;&#x2500; WacliDB<br/>
+ &#x251c;&#x2500;&#x2500; Store<br/>
+ &#x251c;&#x2500;&#x2500; AgentManager<br/>
+ &#x251c;&#x2500;&#x2500; SyncController<br/>
+ &#x251c;&#x2500;&#x2500; SandboxCleaner<br/>
+ &#x251c;&#x2500;&#x2500; ChatSupervisor<br/>
+ &#x2514;&#x2500;&#x2500; Monitor
+    </code>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <h2 class="section-title">Features</h2>
+  <p class="section-sub">Everything you need for production WhatsApp AI workflows.</p>
+  <div class="features-grid">
+    <div class="feat"><div class="feat-dot"></div><div>Per-JID isolated workspaces</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Sandboxed Docker sessions</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Per-workspace tool allowlists</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Human takeover detection</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Message coalescing</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Backlog catch-up</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Single-writer sync controller</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Auto sandbox cleanup</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Hot-reload configuration</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Business hours scheduling</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Per-chat rate limiting</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Safety keywords &amp; escalation</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>Admin notifications</div></div>
+    <div class="feat"><div class="feat-dot"></div><div>CLI for reprocess, reset, deploy</div></div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install">
+  <h2 class="section-title">Quick Install</h2>
+  <p class="section-sub">Up and running in two steps.</p>
+  <div class="install-grid">
+    <div class="install-col">
+      <h3>&#x1f37a; Homebrew</h3>
+      <div class="code-block">
+        <code>
+<span class="cmd">brew</span> tap arvorco/tap<br/>
+<span class="cmd">brew</span> install concierge --HEAD<br/>
+<span class="cmd">cp</span> config.example.json config.json<br/>
+<span class="cmd">bin/concierged</span>
+        </code>
+      </div>
+    </div>
+    <div class="install-col">
+      <h3>&#x1f527; Manual</h3>
+      <div class="code-block">
+        <code>
+<span class="cmd">git</span> clone https://github.com/arvorco/concierge<br/>
+<span class="cmd">cd</span> concierge<br/>
+<span class="cmd">mix</span> deps.get<br/>
+<span class="cmd">cp</span> config.example.json config.json<br/>
+<span class="cmd">mix</span> run --no-halt
+        </code>
+      </div>
+    </div>
+  </div>
+  <div class="prereq-row">
+    <div class="prereq-item"><div class="prereq-dot"></div> Elixir 1.14+</div>
+    <div class="prereq-item"><div class="prereq-dot"></div> SQLite</div>
+    <div class="prereq-item"><div class="prereq-dot"></div> Docker</div>
+    <div class="prereq-item"><div class="prereq-dot"></div> wacli</div>
+    <div class="prereq-item"><div class="prereq-dot"></div> OpenClaw</div>
+    <div class="prereq-item"><div class="prereq-dot"></div> macOS or Linux</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="https://github.com/arvorco/concierge">GitHub</a>
+    <a href="https://github.com/arvorco/concierge/issues">Issues</a>
+    <a href="https://openclaw.ai">OpenClaw</a>
+    <a href="https://github.com/steipete/wacli">wacli</a>
+  </div>
+  <p>Concierge v2.0.0 &middot; MIT License &middot; &copy; 2026 <a href="https://arvor.co">Arvor Co</a></p>
+</footer>
+
+<script>
+  // Mobile nav toggle
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+
+  // Close mobile nav on link click
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => navLinks.classList.remove('open'));
+  });
+</script>
+
+</body>
+</html>
