@@ -215,8 +215,7 @@ defmodule Concierge.Monitor do
           :ok
 
         {:error, %{status: "duplicate"}} ->
-          {:ok, pid} = ChatPool.get_or_create(msg.jid, msg.chat_name)
-          Concierge.ChatHandler.process_message(pid, msg)
+          :ok
 
         {:error, _} ->
           :ok

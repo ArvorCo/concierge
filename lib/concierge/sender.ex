@@ -43,6 +43,8 @@ defmodule Concierge.Sender do
     args = [
       "message",
       "send",
+      "--channel",
+      "whatsapp",
       "--target",
       target,
       "--message",

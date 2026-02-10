@@ -305,7 +305,6 @@ defmodule Concierge.AIClient do
   end
 
   defp sanitize_response(text) do
-    max_len = ConfigServer.get([:filters, :max_response_length], 500)
     prefix = OpenClaw.response_prefix()
 
     text
@@ -313,7 +312,6 @@ defmodule Concierge.AIClient do
     |> String.replace(~r/```[^`]*```/s, "")
     |> String.replace("`", "")
     |> String.trim()
-    |> String.slice(0, max_len)
   end
 
   defp strip_prefix(text, prefix) when is_binary(text) and is_binary(prefix) do
